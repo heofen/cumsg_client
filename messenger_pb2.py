@@ -25,20 +25,20 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0fmessenger.proto\x12\tmessenger\x1a\x1bgoogle/protobuf/empty.proto\"E\n\x0eMessageRequest\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x0c\n\x04user\x18\x02 \x01(\t\x12\x19\n\x11\x65ncrypted_content\x18\x03 \x01(\x0c\"\x10\n\x02Id\x12\n\n\x02id\x18\x01 \x01(\x05\"*\n\x06RsaKey\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x14\n\x0cRsaPublicKey\x18\x02 \x01(\x0c\"\"\n\x0fMessageResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\" \n\x12GetMessagesRequest\x12\n\n\x02id\x18\x01 \x01(\x05\";\n\x13GetMessagesResponse\x12$\n\x08messages\x18\x01 \x03(\x0b\x32\x12.messenger.Message\"G\n\x07Message\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x0c\n\x04user\x18\x02 \x01(\t\x12\x0f\n\x07\x63ontent\x18\x03 \x01(\t\x12\x11\n\ttimestamp\x18\x04 \x01(\t2\xa6\x01\n\x10MessengerService\x12\x44\n\x0bSendMessage\x12\x19.messenger.MessageRequest\x1a\x1a.messenger.MessageResponse\x12L\n\x0bGetMessages\x12\x1d.messenger.GetMessagesRequest\x1a\x1e.messenger.GetMessagesResponse2\xb1\x01\n\x11\x45ncryptionService\x12\x34\n\x0bGetClientId\x12\x16.google.protobuf.Empty\x1a\r.messenger.Id\x12-\n\tGetRsaKey\x12\r.messenger.Id\x1a\x11.messenger.RsaKey\x12\x37\n\nGiveRsaKey\x12\x11.messenger.RsaKey\x1a\x16.google.protobuf.EmptyB\x17Z\x15\x65xample.com/messengerb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0fmessenger.proto\x12\tmessenger\x1a\x1bgoogle/protobuf/empty.proto\"\x10\n\x02Id\x12\n\n\x02id\x18\x01 \x01(\x05\"*\n\x06RsaKey\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x14\n\x0cRsaPublicKey\x18\x02 \x01(\x0c\"E\n\x0eMessageRequest\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x0c\n\x04user\x18\x02 \x01(\t\x12\x19\n\x11\x65ncrypted_content\x18\x03 \x01(\x0c\"\"\n\x0fMessageResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\" \n\x12GetMessagesRequest\x12\n\n\x02id\x18\x01 \x01(\x05\";\n\x13GetMessagesResponse\x12$\n\x08messages\x18\x01 \x03(\x0b\x32\x12.messenger.Message\"G\n\x07Message\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x0c\n\x04user\x18\x02 \x01(\t\x12\x0f\n\x07\x63ontent\x18\x03 \x01(\t\x12\x11\n\ttimestamp\x18\x04 \x01(\t2\xb1\x01\n\x11\x45ncryptionService\x12\x34\n\x0bGetClientId\x12\x16.google.protobuf.Empty\x1a\r.messenger.Id\x12\x37\n\nGiveRsaKey\x12\x11.messenger.RsaKey\x1a\x16.google.protobuf.Empty\x12-\n\tGetRsaKey\x12\r.messenger.Id\x1a\x11.messenger.RsaKey2\xa6\x01\n\x10MessengerService\x12\x44\n\x0bSendMessage\x12\x19.messenger.MessageRequest\x1a\x1a.messenger.MessageResponse\x12L\n\x0bGetMessages\x12\x1d.messenger.GetMessagesRequest\x1a\x1e.messenger.GetMessagesResponseB\tZ\x07/protocb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'messenger_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
-  _globals['DESCRIPTOR']._serialized_options = b'Z\025example.com/messenger'
-  _globals['_MESSAGEREQUEST']._serialized_start=59
-  _globals['_MESSAGEREQUEST']._serialized_end=128
-  _globals['_ID']._serialized_start=130
-  _globals['_ID']._serialized_end=146
-  _globals['_RSAKEY']._serialized_start=148
-  _globals['_RSAKEY']._serialized_end=190
+  _globals['DESCRIPTOR']._serialized_options = b'Z\007/protoc'
+  _globals['_ID']._serialized_start=59
+  _globals['_ID']._serialized_end=75
+  _globals['_RSAKEY']._serialized_start=77
+  _globals['_RSAKEY']._serialized_end=119
+  _globals['_MESSAGEREQUEST']._serialized_start=121
+  _globals['_MESSAGEREQUEST']._serialized_end=190
   _globals['_MESSAGERESPONSE']._serialized_start=192
   _globals['_MESSAGERESPONSE']._serialized_end=226
   _globals['_GETMESSAGESREQUEST']._serialized_start=228
@@ -47,8 +47,8 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_GETMESSAGESRESPONSE']._serialized_end=321
   _globals['_MESSAGE']._serialized_start=323
   _globals['_MESSAGE']._serialized_end=394
-  _globals['_MESSENGERSERVICE']._serialized_start=397
-  _globals['_MESSENGERSERVICE']._serialized_end=563
-  _globals['_ENCRYPTIONSERVICE']._serialized_start=566
-  _globals['_ENCRYPTIONSERVICE']._serialized_end=743
+  _globals['_ENCRYPTIONSERVICE']._serialized_start=397
+  _globals['_ENCRYPTIONSERVICE']._serialized_end=574
+  _globals['_MESSENGERSERVICE']._serialized_start=577
+  _globals['_MESSENGERSERVICE']._serialized_end=743
 # @@protoc_insertion_point(module_scope)

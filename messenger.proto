@@ -1,24 +1,18 @@
 syntax = "proto3";
 
 package messenger;
-option go_package = "example.com/messenger";
+option go_package = "/protoc";
 import "google/protobuf/empty.proto";
 
-service MessengerService {
-  rpc SendMessage (MessageRequest) returns (MessageResponse);
-  rpc GetMessages (GetMessagesRequest) returns (GetMessagesResponse);
-}
-
 service EncryptionService {
-  rpc GetClientId (google.protobuf.Empty) returns (Id);
-  rpc GetRsaKey (Id) returns (RsaKey);                   
-  rpc GiveRsaKey (RsaKey) returns (google.protobuf.Empty); 
+  rpc GetClientId(google.protobuf.Empty) returns (Id);
+  rpc GiveRsaKey(RsaKey) returns (google.protobuf.Empty);
+  rpc GetRsaKey(Id) returns (RsaKey);
 }
 
-message MessageRequest {
-  int32 id = 1;
-  string user = 2;
-  bytes encrypted_content = 3;
+service MessengerService {
+  rpc SendMessage(MessageRequest) returns (MessageResponse);
+  rpc GetMessages(GetMessagesRequest) returns (GetMessagesResponse);
 }
 
 message Id {
@@ -28,6 +22,12 @@ message Id {
 message RsaKey {
   int32 id = 1;
   bytes RsaPublicKey = 2;
+}
+
+message MessageRequest {
+  int32 id = 1;
+  string user = 2;
+  bytes encrypted_content = 3;
 }
 
 message MessageResponse {
