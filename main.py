@@ -27,15 +27,18 @@ server_public_key = None
 
 async def grpc_client():
     global server_public_key
-    async with grpc.aio.insecure_channel('176.120.66.97:8082') as channel:
+    async with grpc.aio.insecure_channel('localhost:50052') as channel: #176.120.66.97:8082
+        print("Connecting...")
         messenger_stub = messenger_pb2_grpc.MessengerServiceStub(channel)
         encryption_stub = messenger_pb2_grpc.EncryptionServiceStub(channel)
 
         client_id_response = await encryption_stub.GetClientId(empty_pb2.Empty())
         client_id = client_id_response.id
+        print("Authenticating...")
         print(f"Received client ID: {client_id}")
 
-        public_key_bytes = client_public_key.public_bytes(
+        public_key = client_private_key.public_key()
+        public_key_bytes = public_key.public_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PublicFormat.SubjectPublicKeyInfo
         )
@@ -59,7 +62,7 @@ async def send_encrypted_message(user, message):
             label=None
         )
     )
-    async with grpc.aio.insecure_channel('localhost:50051') as channel:
+    async with grpc.aio.insecure_channel('localhost:50053') as channel:
         messenger_stub = messenger_pb2_grpc.MessengerServiceStub(channel)
         message_request = messenger_pb2.MessageRequest(
             id=1,
@@ -100,5 +103,4 @@ def handle_receive_message(data):
 
 if __name__ == '__main__':
     asyncio.run(grpc_client())
-
-    socketio.run(app, host='0.0.0.0', port=5000)
+    socketio.run(app, host='0.0.0.0', port=50053, allow_unsafe_werkzeug=True)
