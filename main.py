@@ -51,12 +51,12 @@ async def grpc_client():
         encoding=serialization.Encoding.PEM,
         format=serialization.PublicFormat.SubjectPublicKeyInfo
     )
-    await encryption_stub.GiveRsaKey(messenger_pb2.RsaKey(id=ID, RsaPublicKey=public_key_bytes))
+    await encryption_stub.GiveRsaKey(messenger_pb2.RsaKey(id=ID, rsa_public_key=public_key_bytes))  # Исправлено на rsa_public_key
 
     # Получение публичного ключа сервера
     server_key_response = await encryption_stub.GetRsaKey(messenger_pb2.Id(id=ID))
     server_public_key = serialization.load_pem_public_key(
-        server_key_response.RsaPublicKey,
+        server_key_response.rsa_public_key,  # Исправлено на rsa_public_key
         backend=default_backend()
     )
     print("Received server RSA key.")
@@ -74,8 +74,9 @@ async def stream_messages():
 
     messenger_stub = messenger_pb2_grpc.MessengerServiceStub(grpc_channel)
     try:
+        # Постоянное слушание входящего потока
         async for message in messenger_stub.StreamMessages(messenger_pb2.Id(id=ID)):
-            print(f"New message from {message.user}: {message.content}")  # Логирование нового сообщения
+            print(f"New message from {message.user}: {message.content}")
             socketio.emit('new_message', {'user': message.user, 'message': message.content})
     except grpc.aio._call.AioRpcError as e:
         print(f"Streaming error: {e.details()}")
@@ -86,14 +87,15 @@ def handle_send_message(data):
     """Обработка исходящих сообщений от клиента"""
     user = data['user']
     message = data['message']
-
-    # Печатаем данные перед отправкой
     print(f"Received message from {user}: {message}")
 
-    # Получаем текущий цикл событий
-    loop = asyncio.get_event_loop()
-    # Используем asyncio.run_coroutine_threadsafe для отправки
-    asyncio.run_coroutine_threadsafe(send_encrypted_message(user, message), loop)
+    # Создаем новый цикл событий и запускаем корутину
+    new_loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(new_loop)
+
+    # Запускаем корутину send_encrypted_message
+    new_loop.run_until_complete(send_encrypted_message(user, message))
+
 
 
 async def send_encrypted_message(user, message):
@@ -109,14 +111,15 @@ async def send_encrypted_message(user, message):
             padding.OAEP(mgf=padding.MGF1(algorithm=hashes.SHA256()), algorithm=hashes.SHA256(), label=None)
         )
 
-        print(f"Sending encrypted message from {user}: {message}")  # Логирование перед отправкой
+        print(f"Sending encrypted message from {user}: {message}")
 
         async with grpc.aio.insecure_channel('176.120.66.97:1488') as channel:
             messenger_stub = messenger_pb2_grpc.MessengerServiceStub(channel)
             message_request = messenger_pb2.MessageRequest(id=ID, user=user, encrypted_content=encrypted_content)
             response = await messenger_stub.SendMessage(message_request)
 
-            print(f"Message sent. Success: {response.success}")  # Логирование результата отправки
+            # Логирование результата отправки
+            print(f"Message sent. Success: {response.success}")
 
             if not response.success:
                 print("Failed to send message.")
@@ -124,12 +127,19 @@ async def send_encrypted_message(user, message):
         print(f"Error while sending message: {e}")
 
 
-
 def start_grpc_client():
     asyncio.run(grpc_client())
 
 
+# Вставьте этот блок перед запуском приложения в __main__
 if __name__ == '__main__':
+    # Создаем основной event loop
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+    # Передаем loop в socketio для использования в других потоках
+    socketio.loop = loop
+
     # Запуск gRPC клиента в отдельном потоке
     grpc_thread = Thread(target=start_grpc_client)
     grpc_thread.start()

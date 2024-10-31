@@ -4,27 +4,36 @@ package messenger;
 option go_package = "/protoc";
 import "google/protobuf/empty.proto";
 
+// Сервис для обмена ключами RSA
 service EncryptionService {
-  rpc GetClientId(google.protobuf.Empty) returns (Id);
-  rpc GiveRsaKey(RsaKey) returns (google.protobuf.Empty);
-  rpc GetRsaKey(Id) returns (RsaKey);
+  rpc GetClientId(google.protobuf.Empty) returns (Id); // Получить ID клиента
+  rpc GiveRsaKey(RsaKey) returns (StatusResponse);      // Отправить серверу публичный ключ клиента
+  rpc GetRsaKey(Id) returns (RsaKey);                   // Запросить публичный ключ сервера
 }
 
+// Сервис обмена сообщениями
 service MessengerService {
-  rpc SendMessage(MessageRequest) returns (MessageResponse);
-  rpc GetMessages(GetMessagesRequest) returns (GetMessagesResponse);
-  rpc StreamMessages (Id) returns (stream Message);
+  rpc SendMessage(MessageRequest) returns (MessageResponse);      // Отправка сообщения серверу
+  rpc GetMessages(GetMessagesRequest) returns (GetMessagesResponse); // Получение всех сообщений для клиента
+  rpc StreamMessages(Id) returns (stream Message);                 // Получение потока сообщений
 }
 
+// Запрос/ответы для управления ключами
 message Id {
   int32 id = 1;
 }
 
 message RsaKey {
   int32 id = 1;
-  bytes RsaPublicKey = 2;
+  bytes rsa_public_key = 2;
 }
 
+message StatusResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// Запросы и ответы для обмена сообщениями
 message MessageRequest {
   int32 id = 1;
   string user = 2;
@@ -33,6 +42,7 @@ message MessageRequest {
 
 message MessageResponse {
   bool success = 1;
+  string error_message = 2; // Сообщение об ошибке для диагностики
 }
 
 message GetMessagesRequest {
@@ -49,3 +59,4 @@ message Message {
   string content = 3;
   string timestamp = 4;
 }
+

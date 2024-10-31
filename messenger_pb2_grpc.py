@@ -27,7 +27,8 @@ if _version_not_supported:
 
 
 class EncryptionServiceStub(object):
-    """Missing associated documentation comment in .proto file."""
+    """Сервис для обмена ключами RSA
+    """
 
     def __init__(self, channel):
         """Constructor.
@@ -43,7 +44,7 @@ class EncryptionServiceStub(object):
         self.GiveRsaKey = channel.unary_unary(
                 '/messenger.EncryptionService/GiveRsaKey',
                 request_serializer=messenger__pb2.RsaKey.SerializeToString,
-                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                response_deserializer=messenger__pb2.StatusResponse.FromString,
                 _registered_method=True)
         self.GetRsaKey = channel.unary_unary(
                 '/messenger.EncryptionService/GetRsaKey',
@@ -53,22 +54,26 @@ class EncryptionServiceStub(object):
 
 
 class EncryptionServiceServicer(object):
-    """Missing associated documentation comment in .proto file."""
+    """Сервис для обмена ключами RSA
+    """
 
     def GetClientId(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+        """Получить ID клиента
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def GiveRsaKey(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+        """Отправить серверу публичный ключ клиента
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def GetRsaKey(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+        """Запросить публичный ключ сервера
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -84,7 +89,7 @@ def add_EncryptionServiceServicer_to_server(servicer, server):
             'GiveRsaKey': grpc.unary_unary_rpc_method_handler(
                     servicer.GiveRsaKey,
                     request_deserializer=messenger__pb2.RsaKey.FromString,
-                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+                    response_serializer=messenger__pb2.StatusResponse.SerializeToString,
             ),
             'GetRsaKey': grpc.unary_unary_rpc_method_handler(
                     servicer.GetRsaKey,
@@ -100,7 +105,8 @@ def add_EncryptionServiceServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class EncryptionService(object):
-    """Missing associated documentation comment in .proto file."""
+    """Сервис для обмена ключами RSA
+    """
 
     @staticmethod
     def GetClientId(request,
@@ -145,7 +151,7 @@ class EncryptionService(object):
             target,
             '/messenger.EncryptionService/GiveRsaKey',
             messenger__pb2.RsaKey.SerializeToString,
-            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            messenger__pb2.StatusResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -185,7 +191,8 @@ class EncryptionService(object):
 
 
 class MessengerServiceStub(object):
-    """Missing associated documentation comment in .proto file."""
+    """Сервис обмена сообщениями
+    """
 
     def __init__(self, channel):
         """Constructor.
@@ -211,22 +218,26 @@ class MessengerServiceStub(object):
 
 
 class MessengerServiceServicer(object):
-    """Missing associated documentation comment in .proto file."""
+    """Сервис обмена сообщениями
+    """
 
     def SendMessage(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+        """Отправка сообщения серверу
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def GetMessages(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+        """Получение всех сообщений для клиента
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def StreamMessages(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+        """Получение потока сообщений
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -258,7 +269,8 @@ def add_MessengerServiceServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class MessengerService(object):
-    """Missing associated documentation comment in .proto file."""
+    """Сервис обмена сообщениями
+    """
 
     @staticmethod
     def SendMessage(request,
