@@ -203,6 +203,11 @@ class MessengerServiceStub(object):
                 request_serializer=messenger__pb2.GetMessagesRequest.SerializeToString,
                 response_deserializer=messenger__pb2.GetMessagesResponse.FromString,
                 _registered_method=True)
+        self.StreamMessages = channel.unary_stream(
+                '/messenger.MessengerService/StreamMessages',
+                request_serializer=messenger__pb2.Id.SerializeToString,
+                response_deserializer=messenger__pb2.Message.FromString,
+                _registered_method=True)
 
 
 class MessengerServiceServicer(object):
@@ -220,6 +225,12 @@ class MessengerServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def StreamMessages(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_MessengerServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -232,6 +243,11 @@ def add_MessengerServiceServicer_to_server(servicer, server):
                     servicer.GetMessages,
                     request_deserializer=messenger__pb2.GetMessagesRequest.FromString,
                     response_serializer=messenger__pb2.GetMessagesResponse.SerializeToString,
+            ),
+            'StreamMessages': grpc.unary_stream_rpc_method_handler(
+                    servicer.StreamMessages,
+                    request_deserializer=messenger__pb2.Id.FromString,
+                    response_serializer=messenger__pb2.Message.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -288,6 +304,33 @@ class MessengerService(object):
             '/messenger.MessengerService/GetMessages',
             messenger__pb2.GetMessagesRequest.SerializeToString,
             messenger__pb2.GetMessagesResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def StreamMessages(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_stream(
+            request,
+            target,
+            '/messenger.MessengerService/StreamMessages',
+            messenger__pb2.Id.SerializeToString,
+            messenger__pb2.Message.FromString,
             options,
             channel_credentials,
             insecure,

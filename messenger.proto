@@ -13,6 +13,7 @@ service EncryptionService {
 service MessengerService {
   rpc SendMessage(MessageRequest) returns (MessageResponse);
   rpc GetMessages(GetMessagesRequest) returns (GetMessagesResponse);
+  rpc StreamMessages (Id) returns (stream Message);
 }
 
 message Id {

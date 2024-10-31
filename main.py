@@ -8,13 +8,15 @@ from cryptography.hazmat.backends import default_backend
 from flask import Flask, render_template
 from flask_socketio import SocketIO, emit
 from google.protobuf import empty_pb2
-from threading import Lock
+from threading import Thread
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
-socketio = SocketIO(app)
-lock = Lock()
+socketio = SocketIO(app, async_mode='threading')
+grpc_channel = None
+port = int(input("Enter free port: "))
 
+# Генерация ключей клиента
 client_private_key = rsa.generate_private_key(
     public_exponent=65537,
     key_size=2048,
@@ -26,65 +28,111 @@ server_public_key = None
 ID = None
 
 
+@app.route('/')
+def index():
+    """Раздает HTML-страницу для клиента"""
+    return render_template('index.html')
+
+
 async def grpc_client():
-    global server_public_key, ID
-    async with grpc.aio.insecure_channel('176.120.66.97:1488') as channel:
-        print("Connecting...")
-        encryption_stub = messenger_pb2_grpc.EncryptionServiceStub(channel)
+    """Подключение к серверу и обмен ключами"""
+    global server_public_key, ID, grpc_channel
+    grpc_channel = grpc.aio.insecure_channel('176.120.66.97:1488')
 
-        client_id_response = await encryption_stub.GetClientId(empty_pb2.Empty())
-        ID = client_id_response.id
-        print(f"Received client ID: {ID}")
+    encryption_stub = messenger_pb2_grpc.EncryptionServiceStub(grpc_channel)
 
-        public_key_bytes = client_private_key.public_key().public_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PublicFormat.SubjectPublicKeyInfo
-        )
-        await encryption_stub.GiveRsaKey(messenger_pb2.RsaKey(id=ID, RsaPublicKey=public_key_bytes))
+    # Получение ID клиента от сервера
+    client_id_response = await encryption_stub.GetClientId(empty_pb2.Empty())
+    ID = client_id_response.id
+    print(f"Received client ID: {ID}")
 
-        server_key_response = await encryption_stub.GetRsaKey(messenger_pb2.Id(id=ID))
-        server_public_key = serialization.load_pem_public_key(
-            server_key_response.RsaPublicKey,
-            backend=default_backend()
-        )
-        print("Received server RSA key.")
+    # Отправка публичного ключа клиента на сервер
+    public_key_bytes = client_private_key.public_key().public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo
+    )
+    await encryption_stub.GiveRsaKey(messenger_pb2.RsaKey(id=ID, RsaPublicKey=public_key_bytes))
 
-        asyncio.create_task(stream_messages(channel))
+    # Получение публичного ключа сервера
+    server_key_response = await encryption_stub.GetRsaKey(messenger_pb2.Id(id=ID))
+    server_public_key = serialization.load_pem_public_key(
+        server_key_response.RsaPublicKey,
+        backend=default_backend()
+    )
+    print("Received server RSA key.")
+
+    # Запуск потока для обработки входящих сообщений
+    asyncio.create_task(stream_messages())
 
 
-async def stream_messages(channel):
-    messenger_stub = messenger_pb2_grpc.MessengerServiceStub(channel)
-    async for message in messenger_stub.StreamMessages(messenger_pb2.Id(id=ID)):
-        decrypted_message = client_private_key.decrypt(
-            message.content,
-            padding.OAEP(mgf=padding.MGF1(algorithm=hashes.SHA256()), algorithm=hashes.SHA256(), label=None)
-        ).decode()
-        socketio.emit('new_message', {'user': message.user, 'message': decrypted_message})
+async def stream_messages():
+    """Получение и обработка входящих сообщений от сервера"""
+    global ID, grpc_channel
+    if not grpc_channel:
+        print("GRPC Channel is not initialized")
+        return
+
+    messenger_stub = messenger_pb2_grpc.MessengerServiceStub(grpc_channel)
+    try:
+        async for message in messenger_stub.StreamMessages(messenger_pb2.Id(id=ID)):
+            print(f"New message from {message.user}: {message.content}")  # Логирование нового сообщения
+            socketio.emit('new_message', {'user': message.user, 'message': message.content})
+    except grpc.aio._call.AioRpcError as e:
+        print(f"Streaming error: {e.details()}")
 
 
 @socketio.on('send_message')
 def handle_send_message(data):
+    """Обработка исходящих сообщений от клиента"""
     user = data['user']
     message = data['message']
-    asyncio.run(send_encrypted_message(user, message))
+
+    # Печатаем данные перед отправкой
+    print(f"Received message from {user}: {message}")
+
+    # Получаем текущий цикл событий
+    loop = asyncio.get_event_loop()
+    # Используем asyncio.run_coroutine_threadsafe для отправки
+    asyncio.run_coroutine_threadsafe(send_encrypted_message(user, message), loop)
 
 
 async def send_encrypted_message(user, message):
-    encrypted_content = server_public_key.encrypt(
-        message.encode(),
-        padding.OAEP(mgf=padding.MGF1(algorithm=hashes.SHA256()), algorithm=hashes.SHA256(), label=None)
-    )
-    async with grpc.aio.insecure_channel('176.120.66.97:1488') as channel:
-        messenger_stub = messenger_pb2_grpc.MessengerServiceStub(channel)
-        message_request = messenger_pb2.MessageRequest(id=ID, user=user, encrypted_content=encrypted_content)
-        await messenger_stub.SendMessage(message_request)
+    """Отправка зашифрованного сообщения на сервер"""
+    global server_public_key
+    if server_public_key is None:
+        print("Server public key is not initialized.")
+        return
+
+    try:
+        encrypted_content = server_public_key.encrypt(
+            message.encode(),
+            padding.OAEP(mgf=padding.MGF1(algorithm=hashes.SHA256()), algorithm=hashes.SHA256(), label=None)
+        )
+
+        print(f"Sending encrypted message from {user}: {message}")  # Логирование перед отправкой
+
+        async with grpc.aio.insecure_channel('176.120.66.97:1488') as channel:
+            messenger_stub = messenger_pb2_grpc.MessengerServiceStub(channel)
+            message_request = messenger_pb2.MessageRequest(id=ID, user=user, encrypted_content=encrypted_content)
+            response = await messenger_stub.SendMessage(message_request)
+
+            print(f"Message sent. Success: {response.success}")  # Логирование результата отправки
+
+            if not response.success:
+                print("Failed to send message.")
+    except Exception as e:
+        print(f"Error while sending message: {e}")
 
 
-@app.route('/')
-def index():
-    return render_template('index.html')
+
+def start_grpc_client():
+    asyncio.run(grpc_client())
 
 
 if __name__ == '__main__':
-    asyncio.run(grpc_client())
-    socketio.run(app, host='0.0.0.0', port=5003, allow_unsafe_werkzeug=True)
+    # Запуск gRPC клиента в отдельном потоке
+    grpc_thread = Thread(target=start_grpc_client)
+    grpc_thread.start()
+
+    # Запуск Flask приложения
+    socketio.run(app, host='0.0.0.0', port=port, allow_unsafe_werkzeug=True)
